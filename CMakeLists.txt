@@ -9,6 +9,9 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 set(SOURCES
     src/cli.cpp
+    src/command.cpp
+    src/file.cpp
+    src/format.cpp
 )
 
 find_package(CLI11 REQUIRED)

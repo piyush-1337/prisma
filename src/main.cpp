@@ -1,3 +1,5 @@
+#include <prisma/file.hpp>
+#include <prisma/format.hpp>
 #include <print>
 #include <prisma/cli.hpp>
 
@@ -10,6 +12,15 @@ int main(int argc, char *argv[]) {
 
   if (config.command == "info") {
     std::println("Finding metadata for file: {}", config.file_in);
+    auto file = prisma::MappedFile::create(config.file_in);
+    if (!file) {
+      return 1;
+    }
+    prisma::Format type = prisma::identify_format(file->data());
+
+    if (type == prisma::Format::PNG) {
+      std::println("found png");
+    }
   } else {
     std::println(stderr, "invalid command");
     return 1;

@@ -3,6 +3,7 @@
 #include <cstddef>
 #include <cstdint>
 #include <expected>
+#include <span>
 #include <string_view>
 
 namespace prisma {
@@ -18,6 +19,8 @@ public:
   MappedFile &operator=(MappedFile &&) noexcept;
 
   ~MappedFile();
+
+  std::span<const uint8_t> data();
 
 private:
   uint8_t *m_ptr = nullptr;

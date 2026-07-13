@@ -39,6 +39,8 @@ MappedFile::create(std::string_view filepath) {
   return MappedFile(static_cast<uint8_t *>(ptr), size);
 }
 
+std::span<const uint8_t> MappedFile::data() { return {m_ptr, m_size}; }
+
 MappedFile::MappedFile(uint8_t *ptr, size_t size) noexcept
     : m_ptr(ptr), m_size(size) {}
 
