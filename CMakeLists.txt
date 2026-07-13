@@ -12,6 +12,7 @@ set(SOURCES
     src/command.cpp
     src/file.cpp
     src/format.cpp
+    src/parser.cpp
 )
 
 add_executable(prisma

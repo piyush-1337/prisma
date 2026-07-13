@@ -1,3 +1,4 @@
+#include <prisma/parser.hpp>
 #include <print>
 #include <prisma/cli.hpp>
 #include <prisma/commands.hpp>
@@ -14,11 +15,9 @@ std::expected<void, std::string> execute(PrismaCliConfig config) {
     }
     auto type = identify_format(file->data());
 
-    std::print("Found format: ");
     switch (type) {
     case Format::BMP: {
-      std::println("BMP");
-      break;
+      return prisma::print_bmp_info(file->data());
     };
     case Format::WAV: {
       std::println("WAV");
