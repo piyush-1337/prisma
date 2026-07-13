@@ -7,17 +7,29 @@ int parse(int argc, char *argv[], prisma::PrismaCliConfig &config) {
   CLI::App app{"Prisma - Media transcoder"};
   app.require_subcommand(1);
 
+  // info cmd
   CLI::App *info_cmd =
       app.add_subcommand("info", "Display metadata of the file");
-  std::string info_in;
-  info_cmd->add_option("-i,--input", info_in, "Path to the input file")->required();
+
+  info_cmd->add_option("-i,--input", config.file_in, "Path to the input file")
+      ->required()
+      ->check(CLI::ExistingFile);
+
+  info_cmd->callback([&]() { config.command = Command::INFO; });
+
+  // render cmd
+  CLI::App *render_cmd =
+      app.add_subcommand("render", "Apply filters and render image to stdout");
+
+  render_cmd->add_option("-i,--input", config.file_in, "Path to the input file")
+      ->required()
+      ->check(CLI::ExistingFile);
+
+  render_cmd->add_flag("--invert", config.filters.invert, "Invert all colors");
+  render_cmd->add_flag("--grayscale", config.filters.grayscale,
+                       "Apply luminance grayscale");
 
   CLI11_PARSE(app, argc, argv);
-
-  if (app.got_subcommand(info_cmd)) {
-    config.command = prisma::Command::INFO;
-    config.file_in = info_in;
-  }
 
   return 0;
 }
