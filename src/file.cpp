@@ -36,6 +36,8 @@ MappedFile::create(std::string_view filepath) {
                            std::string(std::strerror(errno)));
   }
 
+  ::close(fd);
+
   return MappedFile(static_cast<uint8_t *>(ptr), size);
 }
 

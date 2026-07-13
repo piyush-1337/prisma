@@ -2,9 +2,17 @@
 
 #include <string>
 
+namespace prisma {
+
+enum class Command {
+  INFO,
+};
+
 struct PrismaCliConfig {
-    std::string command;
-    std::string file_in;
+  Command command;
+  std::string file_in;
 };
 
 int parse(int argc, char *argv[], PrismaCliConfig &config);
+
+} // namespace prisma

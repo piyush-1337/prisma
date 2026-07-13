@@ -1,28 +1,19 @@
-#include <prisma/file.hpp>
-#include <prisma/format.hpp>
 #include <print>
 #include <prisma/cli.hpp>
+#include <prisma/commands.hpp>
+#include <prisma/file.hpp>
+#include <prisma/format.hpp>
 
 int main(int argc, char *argv[]) {
-  PrismaCliConfig config;
+  prisma::PrismaCliConfig config;
 
   if (parse(argc, argv, config) != 0) {
     return 1;
   }
 
-  if (config.command == "info") {
-    std::println("Finding metadata for file: {}", config.file_in);
-    auto file = prisma::MappedFile::create(config.file_in);
-    if (!file) {
-      return 1;
-    }
-    prisma::Format type = prisma::identify_format(file->data());
-
-    if (type == prisma::Format::PNG) {
-      std::println("found png");
-    }
-  } else {
-    std::println(stderr, "invalid command");
+  auto result = prisma::execute(config);
+  if (!result) {
+    std::println(stderr, "Error: {}", result.error());
     return 1;
   }
 

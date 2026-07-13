@@ -1,5 +1,10 @@
 #pragma once
 
-#include <string_view>
+#include <expected>
+#include <prisma/cli.hpp>
 
-void execute(std::string_view command);
+namespace prisma {
+
+std::expected<void, std::string> execute(PrismaCliConfig config);
+
+} // namespace prisma

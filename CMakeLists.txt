@@ -14,12 +14,13 @@ set(SOURCES
     src/format.cpp
 )
 
-find_package(CLI11 REQUIRED)
-
 add_executable(prisma
     src/main.cpp
     ${SOURCES}
 )
+
+find_package(CLI11 REQUIRED)
+target_link_libraries(prisma PRIVATE CLI11::CLI11)
 
 target_include_directories(
     prisma

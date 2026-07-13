@@ -11,7 +11,7 @@ constexpr std::array<uint8_t, 8> MAGIC_PNG = {0x89, 0x50, 0x4E, 0x47,
 
 Format identify_format(std::span<const uint8_t> file_data) {
   auto starts_with = [&](const auto &magic) {
-    return file_data.size() > magic.size() &&
+    return file_data.size() >= magic.size() &&
            std::ranges::equal(file_data.subspan(0, magic.size()), magic);
   };
 
