@@ -8,6 +8,7 @@ enum class Command {
   NONE,
   INFO,
   RENDER,
+  CONVERT,
 };
 
 // always initialize your booleans
@@ -19,6 +20,7 @@ struct Filters {
 struct PrismaCliConfig {
   Command command = Command::NONE;
   std::string file_in;
+  std::string file_out;
   Filters filters;
 };
 

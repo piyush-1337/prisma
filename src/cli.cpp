@@ -29,6 +29,21 @@ int parse(int argc, char *argv[], prisma::PrismaCliConfig &config) {
   render_cmd->add_flag("--grayscale", config.filters.grayscale,
                        "Apply luminance grayscale");
 
+  // convert cmd
+  CLI::App *convert_cmd = app.add_subcommand(
+      "convert", "Convert by either applying filters or chaning format");
+
+  convert_cmd->add_option("-i,--input", config.file_in, "Path to input file")
+      ->required()
+      ->check(CLI::ExistingFile);
+  convert_cmd->add_option("-o,--output", config.file_out, "Path to output file")
+      ->required();
+  convert_cmd->callback([&]() { config.command = Command::CONVERT; });
+
+  convert_cmd->add_flag("--invert", config.filters.invert, "Invert all colors");
+  convert_cmd->add_flag("--grayscale", config.filters.grayscale,
+                        "Apply luminance grayscale");
+
   CLI11_PARSE(app, argc, argv);
 
   return 0;
