@@ -10,9 +10,10 @@ enum class Command {
   RENDER,
 };
 
+// always initialize your booleans
 struct Filters {
-  bool invert;
-  bool grayscale;
+  bool invert = false;
+  bool grayscale = false;
 };
 
 struct PrismaCliConfig {

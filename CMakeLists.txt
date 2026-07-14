@@ -8,11 +8,13 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 set(SOURCES
-    src/cli.cpp
-    src/command.cpp
-    src/file.cpp
-    src/format.cpp
-    src/parser.cpp
+    ./src/cli.cpp
+    ./src/command.cpp
+    ./src/file.cpp
+    ./src/format.cpp
+    ./src/parser.cpp
+    ./src/commands/info.cpp
+    ./src/commands/render.cpp
 )
 
 add_executable(prisma

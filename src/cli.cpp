@@ -14,7 +14,6 @@ int parse(int argc, char *argv[], prisma::PrismaCliConfig &config) {
   info_cmd->add_option("-i,--input", config.file_in, "Path to the input file")
       ->required()
       ->check(CLI::ExistingFile);
-
   info_cmd->callback([&]() { config.command = Command::INFO; });
 
   // render cmd
@@ -24,6 +23,7 @@ int parse(int argc, char *argv[], prisma::PrismaCliConfig &config) {
   render_cmd->add_option("-i,--input", config.file_in, "Path to the input file")
       ->required()
       ->check(CLI::ExistingFile);
+  render_cmd->callback([&]() { config.command = Command::RENDER; });
 
   render_cmd->add_flag("--invert", config.filters.invert, "Invert all colors");
   render_cmd->add_flag("--grayscale", config.filters.grayscale,

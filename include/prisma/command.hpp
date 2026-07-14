@@ -5,6 +5,6 @@
 
 namespace prisma {
 
-std::expected<void, std::string> execute(PrismaCliConfig config);
+std::expected<void, std::string> execute(PrismaCliConfig &config);
 
 } // namespace prisma
