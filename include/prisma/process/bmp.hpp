@@ -35,7 +35,7 @@ std::expected<void, std::string> process_bmp(std::span<const uint8_t> file_data,
 
   for (int32_t y = height - 1; y >= 0; --y) {
     for (int32_t x{}; x < width; ++x) {
-      //                    to the row       +   number of Bpp (usually BGR - 3)
+      //                                        to the row       +   number of Bpp (usually BGR - 3)
       size_t index = file_header.data_offset + (y * width_bytes) + (x * Bpp);
 
       uint8_t b = file_data[index];

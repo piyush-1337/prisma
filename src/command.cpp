@@ -15,7 +15,7 @@ std::expected<void, std::string> execute(PrismaCliConfig &config) {
     return {};
   }
 
-  auto file = prisma::MappedFile::create(config.file_in);
+  auto file = MappedFile::create(config.file_in);
   if (!file) {
     return std::unexpected("couldn't create file");
   }
@@ -76,31 +76,7 @@ std::expected<void, std::string> execute(PrismaCliConfig &config) {
   }
 
   case Command::CONVERT: {
-    auto type = identify_format(file->data());
-
-    // TODO: fix ts
-    switch (type) {
-    case Format::BMP: {
       return convert(file->data(), config.filters, config.file_out);
-    };
-    case Format::WAV: {
-      std::println("WAV");
-      break;
-    }
-    case Format::FLAC: {
-      std::println("FLAC");
-      break;
-    }
-    case Format::PNG: {
-      std::println("PNG");
-      break;
-    }
-    case Format::UNKNOWN: {
-      std::println("UNKNOWN");
-      break;
-    };
-    }
-    break;
   }
 
   default: {
