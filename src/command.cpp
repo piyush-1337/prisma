@@ -38,8 +38,7 @@ std::expected<void, std::string> execute(PrismaCliConfig &config) {
       break;
     }
     case Format::PNG: {
-      std::println("PNG");
-      break;
+      return print_png_info(file->data());
     }
     case Format::UNKNOWN: {
       std::println("UNKNOWN");

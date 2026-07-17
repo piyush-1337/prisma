@@ -1,5 +1,6 @@
 #pragma once
 
+#include <algorithm>
 #include <bit>
 #include <cstddef>
 #include <cstdint>
@@ -80,8 +81,7 @@ struct PngChunk {
     chunk.header = *header_res;
 
     if (offset + chunk.header.length + 4 > bytes.size()) {
-      return std::unexpected(
-          "chunk length exceeds buffer");
+      return std::unexpected("chunk length exceeds buffer");
     }
 
     chunk.data = bytes.subspan(offset, chunk.header.length);
@@ -94,6 +94,83 @@ struct PngChunk {
     offset += 4;
 
     return chunk;
+  }
+};
+
+struct PngImageHeader {
+  uint32_t width;
+  uint32_t height;
+
+  /*
+   * Bit depth restrictions for each colour type are imposed to simplify
+   * implementations and to prohibit combinations that do not compress well. The
+   * allowed combinations are defined in
+   * ![Table](https://www.w3.org/TR/2003/REC-PNG-20031110/#table111).
+   */
+  uint8_t bit_depth;
+
+  /*
+   * Colour type is a single-byte integer that defines the PNG image type. Valid
+   * values are 0, 2, 3, 4, and 6.
+   */
+  uint8_t color_type;
+
+  /*
+   * Compression method is a single-byte integer that indicates the method used
+   * to compress the image data. Only compression method 0 (deflate/inflate
+   * compression with a sliding window of at most 32768 bytes) is defined in
+   * this International Standard. All conforming PNG images shall be compressed
+   * with this scheme.
+   */
+  uint8_t compression_method;
+
+  /*
+   * Filter method is a single-byte integer that indicates the preprocessing
+   * method applied to the image data before compression. Only filter method 0
+   * (adaptive filtering with five basic filter types) is defined in this
+   * International Standard.
+   */
+  uint8_t filter_method;
+
+  /*
+   * Interlace method is a single-byte integer that indicates the transmission
+   * order of the image data. Two values are defined in this International
+   * Standard: 0 (no interlace) or 1 (Adam7 interlace).
+   */
+  uint8_t interlace_method;
+
+  static std::expected<PngImageHeader, std::string> from_chunk(PngChunk chunk) {
+    uint8_t type[4] = {73, 72, 68, 82};
+    if (!std::ranges::equal(chunk.header.chunk_type, type)) {
+      return std::unexpected("chunk is not of type IHDR");
+    }
+
+    auto data = chunk.data;
+    if (data.size() < 13) {
+      return std::unexpected("ihdr payload too small");
+    }
+    size_t offset = 0;
+
+    PngImageHeader header;
+    std::memcpy(&header.width, data.data() + offset, 4);
+    if constexpr (std::endian::native == std::endian::little) {
+      header.width = std::byteswap(header.width);
+    }
+    offset += 4;
+
+    std::memcpy(&header.height, data.data() + offset, 4);
+    if constexpr (std::endian::native == std::endian::little) {
+      header.height = std::byteswap(header.height);
+    }
+    offset += 4;
+
+    header.bit_depth = data[offset++];
+    header.color_type = data[offset++];
+    header.compression_method = data[offset++];
+    header.filter_method = data[offset++];
+    header.interlace_method = data[offset++];
+
+    return header;
   }
 };
 

@@ -1,5 +1,6 @@
 #include <cstring>
 #include <prisma/formats/bmp.hpp>
+#include <prisma/formats/png.hpp>
 #include <prisma/parser.hpp>
 
 namespace prisma {
@@ -19,6 +20,15 @@ parse_bmp(std::span<const uint8_t> file_data) {
               sizeof(BmpInfoHeader));
 
   return std::make_pair(file_header, info_header);
+}
+
+std::expected<PngImageHeader, std::string>
+parse_png(std::span<const uint8_t> file_data) {
+  size_t offset = 8;
+  auto chunk = PngChunk::from_bytes(file_data, offset);
+  if (!chunk)
+    return std::unexpected(chunk.error());
+  return PngImageHeader::from_chunk(*chunk);
 }
 
 } // namespace prisma

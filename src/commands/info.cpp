@@ -24,4 +24,20 @@ print_bmp_info(std::span<const uint8_t> file_data) {
   return {};
 }
 
+std::expected<void, std::string>
+print_png_info(std::span<const uint8_t> file_data) {
+  auto result = parse_png(file_data);
+  if (!result) {
+    return std::unexpected(result.error());
+  }
+
+  auto header = *result;
+
+  std::println("Found format: PNG");
+  std::println("Resolution:   {}x{}", header.width, header.height);
+  std::println("Color Depth:  {}-bit", header.bit_depth);
+
+  return {};
+}
+
 } // namespace prisma

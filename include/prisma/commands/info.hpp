@@ -10,4 +10,7 @@ namespace prisma {
 std::expected<void, std::string>
 print_bmp_info(std::span<const uint8_t> file_data);
 
+std::expected<void, std::string>
+print_png_info(std::span<const uint8_t> file_data);
+
 }
