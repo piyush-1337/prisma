@@ -2,6 +2,7 @@
 #include <cstdint>
 #include <fstream>
 #include <prisma/commands/convert.hpp>
+#include <prisma/format.hpp>
 #include <prisma/process/bmp.hpp>
 #include <vector>
 

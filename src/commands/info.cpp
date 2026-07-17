@@ -6,9 +6,11 @@
 
 namespace prisma {
 
+namespace format::bmp {
+
 std::expected<void, std::string>
-print_bmp_info(std::span<const uint8_t> file_data) {
-  auto result = parse_bmp_header(file_data);
+print_info(std::span<const uint8_t> file_data) {
+  auto result = parse_header(file_data);
   if (!result) {
     return std::unexpected(result.error());
   }
@@ -24,9 +26,13 @@ print_bmp_info(std::span<const uint8_t> file_data) {
   return {};
 }
 
+} // namespace format::bmp
+
+namespace format::png {
+
 std::expected<void, std::string>
-print_png_info(std::span<const uint8_t> file_data) {
-  auto result = parse_png_header(file_data);
+print_info(std::span<const uint8_t> file_data) {
+  auto result = parse_header(file_data);
   if (!result) {
     return std::unexpected(result.error());
   }
@@ -57,5 +63,7 @@ print_png_info(std::span<const uint8_t> file_data) {
 
   return {};
 }
+
+} // namespace format::png
 
 } // namespace prisma

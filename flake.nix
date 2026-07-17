@@ -39,6 +39,7 @@
           cmake
           ninja
           cli11
+          zlib
 
           clang-tools
           neocmakelsp

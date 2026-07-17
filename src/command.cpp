@@ -26,7 +26,7 @@ std::expected<void, std::string> execute(PrismaCliConfig &config) {
 
     switch (type) {
     case Format::BMP: {
-      return print_bmp_info(file->data());
+      return format::bmp::print_info(file->data());
     };
     case Format::WAV: {
       std::println("WAV");
@@ -37,7 +37,7 @@ std::expected<void, std::string> execute(PrismaCliConfig &config) {
       break;
     }
     case Format::PNG: {
-      return print_png_info(file->data());
+      return format::png::print_info(file->data());
     }
     case Format::UNKNOWN: {
       std::println("UNKNOWN");

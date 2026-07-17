@@ -1,12 +1,14 @@
 #include <cstring>
-#include <prisma/formats/bmp.hpp>
-#include <prisma/formats/png.hpp>
+#include <prisma/formats/bmp/bmp.hpp>
+#include <prisma/formats/png/png.hpp>
 #include <prisma/parser.hpp>
 
 namespace prisma {
 
+namespace format::bmp {
+
 std::expected<std::pair<BmpFileHeader, BmpInfoHeader>, std::string>
-parse_bmp_header(std::span<const uint8_t> file_data) {
+parse_header(std::span<const uint8_t> file_data) {
 
   if (file_data.size() < (sizeof(BmpFileHeader) + sizeof(BmpInfoHeader))) {
     return std::unexpected("File too small to contain BMP headers");
@@ -22,13 +24,19 @@ parse_bmp_header(std::span<const uint8_t> file_data) {
   return std::make_pair(file_header, info_header);
 }
 
+} // namespace format::bmp
+
+namespace format::png {
+
 std::expected<PngImageHeader, std::string>
-parse_png_header(std::span<const uint8_t> file_data) {
+parse_header(std::span<const uint8_t> file_data) {
   size_t offset = 8;
   auto chunk = PngChunk::from_bytes(file_data, offset);
   if (!chunk)
     return std::unexpected(chunk.error());
   return PngImageHeader::from_chunk(*chunk);
 }
+
+} // namespace format::png
 
 } // namespace prisma

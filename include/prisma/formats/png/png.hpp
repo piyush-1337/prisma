@@ -9,7 +9,7 @@
 #include <span>
 #include <string>
 
-namespace prisma {
+namespace prisma::format::png {
 
 struct PngChunkHeader {
   /*

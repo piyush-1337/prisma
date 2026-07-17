@@ -2,6 +2,7 @@
 
 #include <cstdint>
 #include <span>
+#include <filesystem>
 
 namespace prisma {
 
@@ -14,5 +15,6 @@ constexpr std::array<uint8_t, 8> MAGIC_PNG = {0x89, 0x50, 0x4E, 0x47,
                                               0x0D, 0x0A, 0x1A, 0x0A};
 
 Format identify_format(std::span<const uint8_t> file_data);
+Format identify_format_from_ext(const std::filesystem::path &path);
 
 } // namespace prisma

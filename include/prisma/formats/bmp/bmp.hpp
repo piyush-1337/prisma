@@ -2,7 +2,7 @@
 
 #include <cstdint>
 
-namespace prisma {
+namespace prisma::format::bmp {
 
 #pragma pack(push, 1)
 
