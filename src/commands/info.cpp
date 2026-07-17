@@ -33,9 +33,27 @@ print_png_info(std::span<const uint8_t> file_data) {
 
   auto header = *result;
 
+  auto color_layout = [](uint8_t color_type) {
+    switch (color_type) {
+    case 0:
+      return "Grayscale";
+    case 2:
+      return "RGB";
+    case 3:
+      return "Indexed";
+    case 4:
+      return "Grayscale + Alpha";
+    case 6:
+      return "RGBA";
+    default:
+      return "Unknown";
+    }
+  };
+
   std::println("Found format: PNG");
   std::println("Resolution:   {}x{}", header.width, header.height);
   std::println("Color Depth:  {}-bit", header.bit_depth);
+  std::println("Color Layout: {}", color_layout(header.color_type));
 
   return {};
 }
