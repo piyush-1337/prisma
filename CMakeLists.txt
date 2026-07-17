@@ -14,7 +14,6 @@ set(SOURCES
     ./src/format.cpp
     ./src/parser.cpp
     ./src/commands/info.cpp
-    ./src/commands/render.cpp
     ./src/commands/convert.cpp
 )
 

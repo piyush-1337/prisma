@@ -7,7 +7,6 @@ namespace prisma {
 enum class Command {
   NONE,
   INFO,
-  RENDER,
   CONVERT,
 };
 
