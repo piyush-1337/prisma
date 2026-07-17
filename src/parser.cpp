@@ -6,7 +6,7 @@
 namespace prisma {
 
 std::expected<std::pair<BmpFileHeader, BmpInfoHeader>, std::string>
-parse_bmp(std::span<const uint8_t> file_data) {
+parse_bmp_header(std::span<const uint8_t> file_data) {
 
   if (file_data.size() < (sizeof(BmpFileHeader) + sizeof(BmpInfoHeader))) {
     return std::unexpected("File too small to contain BMP headers");
@@ -23,7 +23,7 @@ parse_bmp(std::span<const uint8_t> file_data) {
 }
 
 std::expected<PngImageHeader, std::string>
-parse_png(std::span<const uint8_t> file_data) {
+parse_png_header(std::span<const uint8_t> file_data) {
   size_t offset = 8;
   auto chunk = PngChunk::from_bytes(file_data, offset);
   if (!chunk)

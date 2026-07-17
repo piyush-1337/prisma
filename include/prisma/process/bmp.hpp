@@ -12,7 +12,7 @@ template <typename PixelAction>
 std::expected<void, std::string> process_bmp(std::span<const uint8_t> file_data,
                                              Filters filters,
                                              PixelAction &&action) {
-  auto result = parse_bmp(file_data);
+  auto result = parse_bmp_header(file_data);
   if (!result)
     return std::unexpected(result.error());
 

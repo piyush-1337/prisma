@@ -8,7 +8,7 @@ namespace prisma {
 
 std::expected<void, std::string>
 print_bmp_info(std::span<const uint8_t> file_data) {
-  auto result = parse_bmp(file_data);
+  auto result = parse_bmp_header(file_data);
   if (!result) {
     return std::unexpected(result.error());
   }
@@ -26,7 +26,7 @@ print_bmp_info(std::span<const uint8_t> file_data) {
 
 std::expected<void, std::string>
 print_png_info(std::span<const uint8_t> file_data) {
-  auto result = parse_png(file_data);
+  auto result = parse_png_header(file_data);
   if (!result) {
     return std::unexpected(result.error());
   }
