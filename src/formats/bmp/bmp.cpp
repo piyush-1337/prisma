@@ -1,18 +1,27 @@
-#pragma once
-
-#include <cstdint>
-#include <expected>
-#include <prisma/cli.hpp>
+#include <cstring>
 #include <prisma/formats/bmp/bmp.hpp>
-#include <span>
-#include <string>
 
-namespace prisma {
+namespace prisma::format::bmp {
 
-template <typename PixelAction>
-std::expected<void, std::string> process_bmp(std::span<const uint8_t> file_data,
-                                             Filters filters,
-                                             PixelAction &&action) {
+std::expected<std::pair<BmpFileHeader, BmpInfoHeader>, std::string>
+parse_header(std::span<const uint8_t> file_data) {
+
+  if (file_data.size() < (sizeof(BmpFileHeader) + sizeof(BmpInfoHeader))) {
+    return std::unexpected("File too small to contain BMP headers");
+  }
+
+  BmpFileHeader file_header;
+  BmpInfoHeader info_header;
+
+  std::memcpy(&file_header, file_data.data(), sizeof(BmpFileHeader));
+  std::memcpy(&info_header, file_data.data() + sizeof(BmpFileHeader),
+              sizeof(BmpInfoHeader));
+
+  return std::make_pair(file_header, info_header);
+}
+
+std::expected<raw::RawImage, std::string>
+encode(std::span<const uint8_t> file_data) {
   auto result = format::bmp::parse_header(file_data);
   if (!result)
     return std::unexpected(result.error());
@@ -36,33 +45,18 @@ std::expected<void, std::string> process_bmp(std::span<const uint8_t> file_data,
 
   for (int32_t y = height - 1; y >= 0; --y) {
     for (int32_t x{}; x < width; ++x) {
-      //                                        to the row       +   number of Bpp (usually BGR - 3)
+      //                                        to the row       +   number of
+      //                                        Bpp (usually BGR - 3)
       size_t index = file_header.data_offset + (y * width_bytes) + (x * Bpp);
 
       uint8_t b = file_data[index];
       uint8_t g = file_data[index + 1];
       uint8_t r = file_data[index + 2];
 
-      if (filters.invert) {
-        b = 255 - b;
-        g = 255 - g;
-        r = 255 - r;
-      }
-
-      if (filters.grayscale) {
-        uint8_t luminance = (r * 54 + g * 183 + b * 19) >> 8;
-
-        b = luminance;
-        g = luminance;
-        r = luminance;
-      }
-
-      /// returns r, g, b, end of row?, index into the file
-      action(r, g, b, x == width - 1, index);
     }
   }
 
   return {};
 }
 
-} // namespace prisma
+} // namespace prisma::format::bmp

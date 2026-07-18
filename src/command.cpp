@@ -5,7 +5,6 @@
 #include <prisma/commands/info.hpp>
 #include <prisma/file.hpp>
 #include <prisma/format.hpp>
-#include <prisma/parser.hpp>
 
 namespace prisma {
 
@@ -48,7 +47,7 @@ std::expected<void, std::string> execute(PrismaCliConfig &config) {
   }
 
   case Command::CONVERT: {
-      return convert(file->data(), config.filters, config.file_out);
+    return convert(file->data(), config.filters, config.file_out);
   }
 
   default: {

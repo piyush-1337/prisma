@@ -6,15 +6,17 @@ set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+set(CMAKE_CXX_COMPILER clang++)
 
 set(SOURCES
     ./src/cli.cpp
     ./src/command.cpp
     ./src/file.cpp
     ./src/format.cpp
-    ./src/parser.cpp
     ./src/commands/info.cpp
     ./src/commands/convert.cpp
+    ./src/formats/bmp/bmp.cpp
+    ./src/formats/png/png.cpp
 )
 
 add_executable(prisma

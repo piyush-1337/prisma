@@ -41,6 +41,7 @@
           cli11
           zlib
 
+          clang
           clang-tools
           neocmakelsp
         ];

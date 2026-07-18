@@ -1,7 +1,8 @@
 #include <cstdint>
 #include <print>
 #include <prisma/commands/info.hpp>
-#include <prisma/parser.hpp>
+#include <prisma/formats/bmp/bmp.hpp>
+#include <prisma/formats/png/png.hpp>
 #include <span>
 
 namespace prisma {

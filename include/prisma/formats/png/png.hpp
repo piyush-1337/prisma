@@ -174,4 +174,7 @@ struct PngImageHeader {
   }
 };
 
-} // namespace prisma
+std::expected<PngImageHeader, std::string>
+parse_header(std::span<const uint8_t> file_data);
+
+} // namespace prisma::format::png
