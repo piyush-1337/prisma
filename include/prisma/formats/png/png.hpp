@@ -6,8 +6,10 @@
 #include <cstdint>
 #include <cstring>
 #include <expected>
+#include <prisma/formats/raw/raw.hpp>
 #include <span>
 #include <string>
+#include <vector>
 
 namespace prisma::format::png {
 
@@ -174,7 +176,19 @@ struct PngImageHeader {
   }
 };
 
+// optional fields are ommited
+struct PngImage {
+  static constexpr uint8_t magic[8] = {0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A};
+  PngImageHeader ihdr;
+  std::vector<uint8_t> compressed_data;
+};
+
 std::expected<PngImageHeader, std::string>
 parse_header(std::span<const uint8_t> file_data);
+
+std::expected<raw::RawImage, std::string>
+decode(std::span<const uint8_t> file_data);
+
+std::expected<PngImage, std::string> encode(const raw::RawImage &raw_image);
 
 } // namespace prisma::format::png

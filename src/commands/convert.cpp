@@ -4,6 +4,7 @@
 #include <prisma/commands/convert.hpp>
 #include <prisma/format.hpp>
 #include <prisma/formats/bmp/bmp.hpp>
+#include <prisma/formats/png/png.hpp>
 #include <prisma/formats/raw/raw.hpp>
 
 namespace prisma {
@@ -23,11 +24,17 @@ convert(std::span<const uint8_t> file_data, Filters filters,
     if (!res)
       return std::unexpected(res.error());
     raw_image = std::move(*res);
-      break;
+    break;
   }
   case Format::WAV:
   case Format::FLAC:
-  case Format::PNG:
+  case Format::PNG: {
+    auto res = format::png::decode(file_data);
+    if (!res)
+      return std::unexpected(res.error());
+    raw_image = std::move(*res);
+    break;
+  }
   case Format::UNKNOWN:
     return std::unexpected("source format unknown/unimplemented");
   }

@@ -2,7 +2,6 @@
 
 #include <cstdint>
 #include <expected>
-#include <filesystem>
 #include <prisma/formats/raw/raw.hpp>
 #include <span>
 #include <string>

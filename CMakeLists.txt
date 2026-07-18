@@ -28,6 +28,9 @@ add_executable(prisma
 find_package(CLI11 REQUIRED)
 target_link_libraries(prisma PRIVATE CLI11::CLI11)
 
+find_package(ZLIB REQUIRED)
+target_link_libraries(prisma PRIVATE ZLIB::ZLIB)
+
 target_include_directories(
     prisma
     PRIVATE ${PROJECT_SOURCE_DIR}/include
