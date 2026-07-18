@@ -2,6 +2,7 @@
 
 #include <cstdint>
 #include <expected>
+#include <filesystem>
 #include <prisma/formats/raw/raw.hpp>
 #include <span>
 #include <string>
@@ -57,11 +58,19 @@ struct BmpInfoHeader {
 
 #pragma pack(pop)
 
+struct BmpImage {
+  BmpFileHeader file_header;
+  BmpInfoHeader info_header;
+  std::vector<uint8_t> pixels;
+};
 
 std::expected<std::pair<BmpFileHeader, BmpInfoHeader>, std::string>
 parse_header(std::span<const uint8_t> file_data);
 
 std::expected<raw::RawImage, std::string>
-encode(std::span<const uint8_t> file_data);
+decode(std::span<const uint8_t> file_data);
+
+std::expected<BmpImage, std::string> encode(const raw::RawImage &raw_image);
+                                        
 
 } // namespace prisma::format::bmp

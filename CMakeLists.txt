@@ -17,6 +17,7 @@ set(SOURCES
     ./src/commands/convert.cpp
     ./src/formats/bmp/bmp.cpp
     ./src/formats/png/png.cpp
+    ./src/formats/raw/raw.cpp
 )
 
 add_executable(prisma
