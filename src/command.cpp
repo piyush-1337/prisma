@@ -13,7 +13,7 @@ std::expected<void, std::string> execute(PrismaCliConfig &config) {
     return {};
   }
 
-  auto file = MappedFile::create(config.file_in);
+  auto file = prisma::MappedFile::create(config.file_in);
   if (!file) {
     return std::unexpected("couldn't create file");
   }
@@ -25,7 +25,7 @@ std::expected<void, std::string> execute(PrismaCliConfig &config) {
 
     switch (type) {
     case Format::BMP: {
-      return format::bmp::print_info(file->data());
+      return codec::bmp::print_info(file->data());
     };
     case Format::WAV: {
       std::println("WAV");
@@ -36,7 +36,7 @@ std::expected<void, std::string> execute(PrismaCliConfig &config) {
       break;
     }
     case Format::PNG: {
-      return format::png::print_info(file->data());
+      return codec::png::print_info(file->data());
     }
     case Format::UNKNOWN: {
       std::println("UNKNOWN");

@@ -7,13 +7,13 @@
 
 namespace prisma {
 
-namespace format::bmp {
+namespace codec::bmp {
 
 std::expected<void, std::string> print_info(std::span<const uint8_t> file_data);
 
 }
 
-namespace format::png {
+namespace codec::png {
 
 std::expected<void, std::string> print_info(std::span<const uint8_t> file_data);
 

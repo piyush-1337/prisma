@@ -3,9 +3,9 @@
 #include <cstdint>
 #include <vector>
 
-namespace prisma::format::raw {
+namespace prisma::core {
 
-struct RawImage {
+struct Image {
     uint32_t width;
     uint32_t height;
     uint8_t channels;
@@ -13,7 +13,7 @@ struct RawImage {
     std::vector<uint8_t> pixels;
 };
 
-void apply_grayscale(RawImage &raw_image);
-void apply_invert(RawImage &raw_image);
+void apply_grayscale(Image &image);
+void apply_invert(Image &image);
 
 }

@@ -2,10 +2,10 @@
 #include <cstdint>
 #include <cstring>
 #include <prisma/format.hpp>
-#include <prisma/formats/bmp/bmp.hpp>
-#include <prisma/formats/raw/raw.hpp>
+#include <prisma/codecs/image/bmp/bmp.hpp>
+#include <prisma/core/image.hpp>
 
-namespace prisma::format::bmp {
+namespace prisma::codec::bmp {
 
 std::expected<std::pair<BmpFileHeader, BmpInfoHeader>, std::string>
 parse_header(std::span<const uint8_t> file_data) {
@@ -44,9 +44,9 @@ parse_header(std::span<const uint8_t> file_data) {
   return std::make_pair(file_header, info_header);
 }
 
-std::expected<raw::RawImage, std::string>
+std::expected<core::Image, std::string>
 decode(std::span<const uint8_t> file_data) {
-  auto result = format::bmp::parse_header(file_data);
+  auto result = codec::bmp::parse_header(file_data);
   if (!result)
     return std::unexpected(result.error());
 
@@ -65,11 +65,11 @@ decode(std::span<const uint8_t> file_data) {
 
   uint16_t bytes_per_pixel = bpp / 8;
 
-  raw::RawImage raw_image;
-  raw_image.width = width;
-  raw_image.height = height;
-  raw_image.channels = bytes_per_pixel;
-  raw_image.pixels.resize(width * height * bytes_per_pixel);
+  core::Image image;
+  image.width = width;
+  image.height = height;
+  image.channels = bytes_per_pixel;
+  image.pixels.resize(width * height * bytes_per_pixel);
 
   // should be multiple of 4
   uint32_t bmp_row_bytes = ((width * bytes_per_pixel) + 3) & ~3;
@@ -91,27 +91,27 @@ decode(std::span<const uint8_t> file_data) {
       uint8_t g = file_data[bmp_index + 1];
       uint8_t r = file_data[bmp_index + 2];
 
-      raw_image.pixels[raw_index] = r;
-      raw_image.pixels[raw_index + 1] = g;
-      raw_image.pixels[raw_index + 2] = b;
+      image.pixels[raw_index] = r;
+      image.pixels[raw_index + 1] = g;
+      image.pixels[raw_index + 2] = b;
 
       if (bytes_per_pixel == 4) {
-        raw_image.pixels[raw_index + 3] = file_data[bmp_index + 3];
+        image.pixels[raw_index + 3] = file_data[bmp_index + 3];
       }
     }
   }
 
-  return raw_image;
+  return image;
 }
 
-std::expected<BmpImage, std::string> encode(const raw::RawImage &raw_image) {
-  uint32_t width = raw_image.width;
-  uint32_t height = raw_image.height;
-  uint16_t channels = raw_image.channels;
+std::expected<BmpImage, std::string> encode(const core::Image &image) {
+  uint32_t width = image.width;
+  uint32_t height = image.height;
+  uint16_t channels = image.channels;
 
-  uint32_t raw_row_bytes = raw_image.width * raw_image.channels;
+  uint32_t raw_row_bytes = image.width * image.channels;
   uint32_t bmp_row_bytes = (raw_row_bytes + 3) & ~3;
-  uint32_t pixels_size = bmp_row_bytes * raw_image.height;
+  uint32_t pixels_size = bmp_row_bytes * image.height;
   uint32_t header_size = sizeof(BmpFileHeader) + sizeof(BmpInfoHeader);
 
   std::vector<uint8_t> bmp_pixels(bmp_row_bytes * height, 0);
@@ -121,16 +121,16 @@ std::expected<BmpImage, std::string> encode(const raw::RawImage &raw_image) {
       size_t raw_idx = (y * raw_row_bytes) + (x * channels);
       size_t bmp_idx = (y * bmp_row_bytes) + (x * channels);
 
-      uint8_t r = raw_image.pixels[raw_idx];
-      uint8_t g = raw_image.pixels[raw_idx + 1];
-      uint8_t b = raw_image.pixels[raw_idx + 2];
+      uint8_t r = image.pixels[raw_idx];
+      uint8_t g = image.pixels[raw_idx + 1];
+      uint8_t b = image.pixels[raw_idx + 2];
 
       bmp_pixels[bmp_idx] = b;
       bmp_pixels[bmp_idx + 1] = g;
       bmp_pixels[bmp_idx + 2] = r;
 
       if (channels == 4) {
-        bmp_pixels[bmp_idx + 3] = raw_image.pixels[raw_idx + 3];
+        bmp_pixels[bmp_idx + 3] = image.pixels[raw_idx + 3];
       }
     }
   }
@@ -145,10 +145,10 @@ std::expected<BmpImage, std::string> encode(const raw::RawImage &raw_image) {
 
   BmpInfoHeader info_header = {
       .header_size = sizeof(BmpInfoHeader),
-      .width = static_cast<int32_t>(raw_image.width),
-      .height = -static_cast<int32_t>(raw_image.height), // easy
+      .width = static_cast<int32_t>(image.width),
+      .height = -static_cast<int32_t>(image.height), // easy
       .npanes = 1,
-      .cdepth = static_cast<uint16_t>(raw_image.channels * 8),
+      .cdepth = static_cast<uint16_t>(image.channels * 8),
       .compression_method = 0,
       .image_size = pixels_size,
       .h_res = 2835, // 72 dpi (standard)
@@ -161,4 +161,4 @@ std::expected<BmpImage, std::string> encode(const raw::RawImage &raw_image) {
                   .pixels = bmp_pixels};
 }
 
-} // namespace prisma::format::bmp
+} // namespace prisma::codec::bmp

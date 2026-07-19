@@ -6,12 +6,12 @@
 #include <cstdint>
 #include <cstring>
 #include <expected>
-#include <prisma/formats/raw/raw.hpp>
+#include <prisma/core/image.hpp>
 #include <span>
 #include <string>
 #include <vector>
 
-namespace prisma::format::png {
+namespace prisma::codec::png {
 
 constexpr uint8_t ihdr_type[4] = {73, 72, 68, 82};
 constexpr uint8_t idat_type[4] = {73, 68, 65, 84};
@@ -216,9 +216,9 @@ struct PngImage {
 std::expected<PngImageHeader, std::string>
 parse_header(std::span<const uint8_t> file_data);
 
-std::expected<raw::RawImage, std::string>
-decode(std::span<const uint8_t> file_data, raw::RawImage &raw_image);
+std::expected<core::Image, std::string>
+decode(std::span<const uint8_t> file_data, core::Image &image);
 
-std::expected<PngImage, std::string> encode(const raw::RawImage &raw_image);
+std::expected<PngImage, std::string> encode(const core::Image &image);
 
-} // namespace prisma::format::png
+} // namespace prisma::codec::png

@@ -2,11 +2,11 @@
 
 #include <cstdint>
 #include <expected>
-#include <prisma/formats/raw/raw.hpp>
+#include <prisma/core/image.hpp>
 #include <span>
 #include <string>
 
-namespace prisma::format::bmp {
+namespace prisma::codec::bmp {
 
 #pragma pack(push, 1)
 
@@ -66,10 +66,10 @@ struct BmpImage {
 std::expected<std::pair<BmpFileHeader, BmpInfoHeader>, std::string>
 parse_header(std::span<const uint8_t> file_data);
 
-std::expected<raw::RawImage, std::string>
+std::expected<core::Image, std::string>
 decode(std::span<const uint8_t> file_data);
 
-std::expected<BmpImage, std::string> encode(const raw::RawImage &raw_image);
+std::expected<BmpImage, std::string> encode(const core::Image &image);
                                         
 
-} // namespace prisma::format::bmp
+} // namespace prisma::codec::bmp

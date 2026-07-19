@@ -3,9 +3,9 @@
 #include <fstream>
 #include <prisma/commands/convert.hpp>
 #include <prisma/format.hpp>
-#include <prisma/formats/bmp/bmp.hpp>
-#include <prisma/formats/png/png.hpp>
-#include <prisma/formats/raw/raw.hpp>
+#include <prisma/codecs/image/bmp/bmp.hpp>
+#include <prisma/codecs/image/png/png.hpp>
+#include <prisma/core/image.hpp>
 
 namespace prisma {
 
@@ -16,24 +16,24 @@ convert(std::span<const uint8_t> file_data, Filters filters,
   auto src = identify_format(file_data);
   auto dest = identify_format_from_ext(out_path);
 
-  format::raw::RawImage raw_image;
+  core::Image image;
 
   switch (src) {
   case Format::BMP: {
-    auto res = format::bmp::decode(file_data);
+    auto res = codec::bmp::decode(file_data);
     if (!res)
       return std::unexpected(res.error());
-    raw_image = std::move(*res);
+    image = std::move(*res);
     break;
   }
   case Format::WAV:
   case Format::FLAC:
   case Format::PNG: {
-    format::raw::RawImage raw_image;
-    auto res = format::png::decode(file_data, raw_image);
+    core::Image image_temp;
+    auto res = codec::png::decode(file_data, image_temp);
     if (!res)
       return std::unexpected(res.error());
-    raw_image = std::move(*res);
+    image = std::move(*res);
     break;
   }
   case Format::UNKNOWN:
@@ -41,18 +41,18 @@ convert(std::span<const uint8_t> file_data, Filters filters,
   }
 
   if (filters.grayscale) {
-    format::raw::apply_grayscale(raw_image);
+    core::apply_grayscale(image);
   }
   if (filters.invert) {
-    format::raw::apply_invert(raw_image);
+    core::apply_invert(image);
   }
 
   switch (dest) {
   case Format::BMP: {
-    auto res = format::bmp::encode(raw_image);
+    auto res = codec::bmp::encode(image);
     if (!res)
       return std::unexpected(res.error());
-    format::bmp::BmpImage image = std::move(*res);
+    codec::bmp::BmpImage image_out = std::move(*res);
 
     std::ofstream out(out_path, std::ios::binary);
     if (!out.is_open()) {
@@ -62,18 +62,18 @@ convert(std::span<const uint8_t> file_data, Filters filters,
 
     if constexpr (std::endian::native == std::endian::little) {
 
-      out.write(reinterpret_cast<const char *>(&image.file_header),
-                sizeof(format::bmp::BmpFileHeader));
-      out.write(reinterpret_cast<const char *>(&image.info_header),
-                sizeof(format::bmp::BmpInfoHeader));
+      out.write(reinterpret_cast<const char *>(&image_out.file_header),
+                sizeof(codec::bmp::BmpFileHeader));
+      out.write(reinterpret_cast<const char *>(&image_out.info_header),
+                sizeof(codec::bmp::BmpInfoHeader));
     } else {
-      format::bmp::BmpFileHeader le_file_header = image.file_header;
+      codec::bmp::BmpFileHeader le_file_header = image_out.file_header;
       le_file_header.file_size = std::byteswap(le_file_header.file_size);
       le_file_header.reserved1 = std::byteswap(le_file_header.reserved1);
       le_file_header.reserved2 = std::byteswap(le_file_header.reserved2);
       le_file_header.data_offset = std::byteswap(le_file_header.data_offset);
 
-      format::bmp::BmpInfoHeader le_info_header = image.info_header;
+      codec::bmp::BmpInfoHeader le_info_header = image_out.info_header;
       le_info_header.header_size = std::byteswap(le_info_header.header_size);
       le_info_header.width = std::byteswap(le_info_header.width);
       le_info_header.height = std::byteswap(le_info_header.height);
@@ -88,24 +88,24 @@ convert(std::span<const uint8_t> file_data, Filters filters,
       le_info_header.nimpcolors = std::byteswap(le_info_header.nimpcolors);
 
       out.write(reinterpret_cast<const char *>(&le_file_header),
-                sizeof(format::bmp::BmpFileHeader));
+                sizeof(codec::bmp::BmpFileHeader));
       out.write(reinterpret_cast<const char *>(&le_info_header),
-                sizeof(format::bmp::BmpInfoHeader));
+                sizeof(codec::bmp::BmpInfoHeader));
     }
 
-    out.write(reinterpret_cast<const char *>(image.pixels.data()),
-              image.pixels.size());
+    out.write(reinterpret_cast<const char *>(image_out.pixels.data()),
+              image_out.pixels.size());
 
     return {};
   }
   case Format::WAV:
   case Format::FLAC:
   case Format::PNG: {
-    auto res = format::png::encode(raw_image);
+    auto res = codec::png::encode(image);
     if (!res)
       return std::unexpected(res.error());
 
-    format::png::PngImage image = std::move(*res);
+    codec::png::PngImage image_out = std::move(*res);
     std::ofstream out(out_path, std::ios::binary);
     if (!out.is_open()) {
       std::unexpected(std::format("failed to open file for wrinting: {}",
@@ -113,8 +113,8 @@ convert(std::span<const uint8_t> file_data, Filters filters,
     }
 
     const char *buf =
-        reinterpret_cast<const char *>(image.compressed_data.data());
-    size_t size = image.compressed_data.size();
+        reinterpret_cast<const char *>(image_out.compressed_data.data());
+    size_t size = image_out.compressed_data.size();
 
     out.write(buf, size);
 

@@ -1,13 +1,13 @@
 #include <cstdint>
 #include <print>
 #include <prisma/commands/info.hpp>
-#include <prisma/formats/bmp/bmp.hpp>
-#include <prisma/formats/png/png.hpp>
+#include <prisma/codecs/image/bmp/bmp.hpp>
+#include <prisma/codecs/image/png/png.hpp>
 #include <span>
 
 namespace prisma {
 
-namespace format::bmp {
+namespace codec::bmp {
 
 std::expected<void, std::string>
 print_info(std::span<const uint8_t> file_data) {
@@ -27,9 +27,9 @@ print_info(std::span<const uint8_t> file_data) {
   return {};
 }
 
-} // namespace format::bmp
+} // namespace codec::bmp
 
-namespace format::png {
+namespace codec::png {
 
 std::expected<void, std::string>
 print_info(std::span<const uint8_t> file_data) {
@@ -65,6 +65,6 @@ print_info(std::span<const uint8_t> file_data) {
   return {};
 }
 
-} // namespace format::png
+} // namespace codec::png
 
 } // namespace prisma

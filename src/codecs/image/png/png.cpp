@@ -1,9 +1,9 @@
 #include <bit>
 #include <format>
-#include <prisma/formats/png/png.hpp>
+#include <prisma/codecs/image/png/png.hpp>
 #include <zlib.h>
 
-namespace prisma::format::png {
+namespace prisma::codec::png {
 
 std::expected<PngImageHeader, std::string>
 parse_header(std::span<const uint8_t> file_data) {
@@ -14,8 +14,8 @@ parse_header(std::span<const uint8_t> file_data) {
   return PngImageHeader::from_chunk(*chunk);
 }
 
-std::expected<raw::RawImage, std::string>
-decode(std::span<const uint8_t> file_data, raw::RawImage &raw_image) {
+std::expected<core::Image, std::string>
+decode(std::span<const uint8_t> file_data, core::Image &image) {
   size_t offset = 8;
 
   auto header_chunk = PngChunk::from_bytes(file_data, offset);
@@ -71,10 +71,10 @@ decode(std::span<const uint8_t> file_data, raw::RawImage &raw_image) {
   if (dest_len != decompressed_size)
     return std::unexpected("decompressed data size mismatch");
 
-  raw_image.width = header.width;
-  raw_image.height = header.height;
-  raw_image.channels = channels;
-  raw_image.pixels.resize(header.width * header.height * channels);
+  image.width = header.width;
+  image.height = header.height;
+  image.channels = channels;
+  image.pixels.resize(header.width * header.height * channels);
 
   auto paeth = [](int a, int b, int c) -> uint8_t {
     int p = a + b - c;
@@ -98,11 +98,11 @@ decode(std::span<const uint8_t> file_data, raw::RawImage &raw_image) {
       uint8_t byte = decompressed_data[data_idx + x];
 
       uint8_t left =
-          (x >= channels) ? raw_image.pixels[raw_row_idx + x - channels] : 0;
-      uint8_t up = (y > 0) ? raw_image.pixels[raw_row_idx - row_bytes + x] : 0;
+          (x >= channels) ? image.pixels[raw_row_idx + x - channels] : 0;
+      uint8_t up = (y > 0) ? image.pixels[raw_row_idx - row_bytes + x] : 0;
       uint8_t up_left =
           (y > 0 && x >= channels)
-              ? raw_image.pixels[raw_row_idx - row_bytes + x - channels]
+              ? image.pixels[raw_row_idx - row_bytes + x - channels]
               : 0;
 
       switch (filter) {
@@ -129,11 +129,11 @@ decode(std::span<const uint8_t> file_data, raw::RawImage &raw_image) {
             std::format("unknown png filter type: {}", filter));
       }
 
-      raw_image.pixels[raw_row_idx + x] = byte;
+      image.pixels[raw_row_idx + x] = byte;
     }
   }
 
-  return raw_image;
+  return image;
 }
 
 void write_chunk(std::vector<uint8_t> &out, const uint8_t type[4],
@@ -163,17 +163,17 @@ void write_chunk(std::vector<uint8_t> &out, const uint8_t type[4],
   out.insert(out.end(), ptr, ptr + 4);
 }
 
-std::expected<PngImage, std::string> encode(const raw::RawImage &raw_image) {
-  uint32_t raw_row_bytes = raw_image.width * raw_image.channels;
-  size_t data_size = raw_image.height * (1 + raw_row_bytes);
+std::expected<PngImage, std::string> encode(const core::Image &image) {
+  uint32_t raw_row_bytes = image.width * image.channels;
+  size_t data_size = image.height * (1 + raw_row_bytes);
   std::vector<uint8_t> data(data_size);
 
-  for (uint32_t y{}; y < raw_image.height; ++y) {
+  for (uint32_t y{}; y < image.height; ++y) {
     size_t raw_idx = y * raw_row_bytes;
     size_t data_idx = y * (1 + raw_row_bytes);
 
     data[data_idx] = 0;
-    std::memcpy(&data[data_idx + 1], &raw_image.pixels[raw_idx], raw_row_bytes);
+    std::memcpy(&data[data_idx + 1], &image.pixels[raw_idx], raw_row_bytes);
   }
 
   uLongf dest_len = compressBound(static_cast<uLongf>(data_size));
@@ -187,7 +187,7 @@ std::expected<PngImage, std::string> encode(const raw::RawImage &raw_image) {
 
   compressed_data.resize(dest_len);
 
-  PngImage image;
+  PngImage image_out;
 
   std::vector<uint8_t> out;
   //      magic + IHDR + IDAT + data + IEND
@@ -197,8 +197,8 @@ std::expected<PngImage, std::string> encode(const raw::RawImage &raw_image) {
   out.insert(out.end(), PngImage::magic, PngImage::magic + 8);
 
   // write IHDR
-  uint32_t width = raw_image.width;
-  uint32_t height = raw_image.height;
+  uint32_t width = image.width;
+  uint32_t height = image.height;
   if constexpr (std::endian::native == std::endian::little) {
     width = std::byteswap(width);
     height = std::byteswap(height);
@@ -210,7 +210,7 @@ std::expected<PngImage, std::string> encode(const raw::RawImage &raw_image) {
   ptr = reinterpret_cast<const uint8_t *>(&height);
   ihdr_data.insert(ihdr_data.end(), ptr, ptr + 4);
   ihdr_data.push_back(8);
-  ihdr_data.push_back(raw_image.channels == 3 ? 2 : 6);
+  ihdr_data.push_back(image.channels == 3 ? 2 : 6);
   ihdr_data.push_back(0);
   ihdr_data.push_back(0);
   ihdr_data.push_back(0);
@@ -219,8 +219,8 @@ std::expected<PngImage, std::string> encode(const raw::RawImage &raw_image) {
   write_chunk(out, idat_type, compressed_data);
   write_chunk(out, iend_type, {});
 
-  image.compressed_data = std::move(out);
-  return image;
+  image_out.compressed_data = std::move(out);
+  return image_out;
 }
 
-} // namespace prisma::format::png
+} // namespace prisma::codec::png

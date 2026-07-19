@@ -1,13 +1,13 @@
-#include <prisma/formats/raw/raw.hpp>
+#include <prisma/core/image.hpp>
 
-namespace prisma::format::raw {
+namespace prisma::core {
 
-void apply_grayscale(RawImage &raw_image) {
-  auto &pixels = raw_image.pixels;
-  uint32_t total_pixels = raw_image.width * raw_image.height;
+void apply_grayscale(Image &image) {
+  auto &pixels = image.pixels;
+  uint32_t total_pixels = image.width * image.height;
 
   for (uint32_t i{}; i < total_pixels; ++i) {
-    size_t idx = i * raw_image.channels;
+    size_t idx = i * image.channels;
     uint8_t r = pixels[idx];
     uint8_t g = pixels[idx + 1];
     uint8_t b = pixels[idx + 2];
@@ -20,12 +20,12 @@ void apply_grayscale(RawImage &raw_image) {
   }
 }
 
-void apply_invert(RawImage &raw_image) {
-  auto &pixels = raw_image.pixels;
-  uint32_t total_pixels = raw_image.width * raw_image.height;
+void apply_invert(Image &image) {
+  auto &pixels = image.pixels;
+  uint32_t total_pixels = image.width * image.height;
 
   for (uint32_t i{}; i < total_pixels; ++i) {
-    size_t idx = i * raw_image.channels;
+    size_t idx = i * image.channels;
 
     pixels[idx] = 255 - pixels[idx];
     pixels[idx + 1] = 255 - pixels[idx + 1];
@@ -33,4 +33,4 @@ void apply_invert(RawImage &raw_image) {
   }
 }
 
-} // namespace prisma::format::raw
+} // namespace prisma::core

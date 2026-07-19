@@ -15,9 +15,9 @@ set(SOURCES
     ./src/format.cpp
     ./src/commands/info.cpp
     ./src/commands/convert.cpp
-    ./src/formats/bmp/bmp.cpp
-    ./src/formats/png/png.cpp
-    ./src/formats/raw/raw.cpp
+    ./src/codecs/image/bmp/bmp.cpp
+    ./src/codecs/image/png/png.cpp
+    ./src/core/image.cpp
 )
 
 add_library(prisma_core OBJECT ${SOURCES})
