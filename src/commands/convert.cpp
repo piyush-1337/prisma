@@ -54,6 +54,10 @@ convert(std::span<const uint8_t> file_data, Filters filters,
     format::bmp::BmpImage image = std::move(*res);
 
     std::ofstream out(out_path, std::ios::binary);
+    if (!out.is_open()) {
+      std::unexpected(std::format("failed to open file for wrinting: {}",
+                                  out_path.string()));
+    }
 
     if constexpr (std::endian::native == std::endian::little) {
 
@@ -95,7 +99,26 @@ convert(std::span<const uint8_t> file_data, Filters filters,
   }
   case Format::WAV:
   case Format::FLAC:
-  case Format::PNG:
+  case Format::PNG: {
+    auto res = format::png::encode(raw_image);
+    if (!res)
+      return std::unexpected(res.error());
+
+    format::png::PngImage image = std::move(*res);
+    std::ofstream out(out_path, std::ios::binary);
+    if (!out.is_open()) {
+      std::unexpected(std::format("failed to open file for wrinting: {}",
+                                  out_path.string()));
+    }
+
+    const char *buf =
+        reinterpret_cast<const char *>(image.compressed_data.data());
+    size_t size = image.compressed_data.size();
+
+    out.write(buf, size);
+
+    return {};
+  }
   case Format::UNKNOWN:
     return std::unexpected("destination format unknown/unimplemented");
   }

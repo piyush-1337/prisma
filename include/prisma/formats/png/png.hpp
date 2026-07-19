@@ -13,6 +13,10 @@
 
 namespace prisma::format::png {
 
+constexpr uint8_t ihdr_type[4] = {73, 72, 68, 82};
+constexpr uint8_t idat_type[4] = {73, 68, 65, 84};
+constexpr uint8_t iend_type[4] = {73, 69, 78, 68};
+
 struct PngChunkHeader {
   /*
    * A four-byte unsigned integer giving the number of bytes in the chunk's
@@ -174,11 +178,37 @@ struct PngImageHeader {
 
     return header;
   }
+
+  std::vector<uint8_t> serialize() const {
+    std::vector<uint8_t> data(13);
+    size_t offset = 0;
+
+    uint32_t be_width = width;
+    uint32_t be_height = height;
+    if constexpr (std::endian::native == std::endian::little) {
+      be_width = std::byteswap(be_width);
+      be_height = std::byteswap(be_height);
+    }
+
+    std::memcpy(data.data() + offset, &be_width, 4);
+    offset += 4;
+    std::memcpy(data.data() + offset, &be_height, 4);
+    offset += 4;
+
+    data[offset++] = bit_depth;
+    data[offset++] = color_type;
+    data[offset++] = compression_method;
+    data[offset++] = filter_method;
+    data[offset++] = interlace_method;
+
+    return data;
+  }
 };
 
 // optional fields are ommited
 struct PngImage {
-  static constexpr uint8_t magic[8] = {0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A};
+  static constexpr uint8_t magic[8] = {0x89, 0x50, 0x4E, 0x47,
+                                       0x0D, 0x0A, 0x1A, 0x0A};
   PngImageHeader ihdr;
   std::vector<uint8_t> compressed_data;
 };
