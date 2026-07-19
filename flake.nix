@@ -30,6 +30,7 @@
           cmake
           ninja
           cli11
+          zlib
         ];
       };
 
@@ -41,10 +42,14 @@
           cli11
           zlib
 
+          gbenchmark
+
           clang
           clang-tools
           neocmakelsp
         ];
+
+        NIX_ENFORCE_NO_NATIVE = 0;
       };
     };
 }

@@ -20,22 +20,24 @@ set(SOURCES
     ./src/formats/raw/raw.cpp
 )
 
-add_executable(prisma
-    src/main.cpp
-    ${SOURCES}
-)
+add_library(prisma_core OBJECT ${SOURCES})
 
-find_package(CLI11 REQUIRED)
-target_link_libraries(prisma PRIVATE CLI11::CLI11)
+target_include_directories(prisma_core PUBLIC ${PROJECT_SOURCE_DIR}/include)
 
 find_package(ZLIB REQUIRED)
-target_link_libraries(prisma PRIVATE ZLIB::ZLIB)
+target_link_libraries(prisma_core PUBLIC ZLIB::ZLIB)
 
-target_include_directories(
-    prisma
-    PRIVATE ${PROJECT_SOURCE_DIR}/include
-)
+add_executable(prisma src/main.cpp)
+
+find_package(CLI11 REQUIRED)
+target_link_libraries(prisma PRIVATE prisma_core CLI11::CLI11)
 
 include(GNUInstallDirs)
-install(TARGETS prisma
-    RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
+install(TARGETS prisma RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
+
+option(PRISMA_BUILD_BENCH "build bench binary" OFF)
+
+if(PRISMA_BUILD_BENCH)
+    enable_testing()
+    add_subdirectory(bench)
+endif()

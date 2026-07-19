@@ -29,7 +29,8 @@ convert(std::span<const uint8_t> file_data, Filters filters,
   case Format::WAV:
   case Format::FLAC:
   case Format::PNG: {
-    auto res = format::png::decode(file_data);
+    format::raw::RawImage raw_image;
+    auto res = format::png::decode(file_data, raw_image);
     if (!res)
       return std::unexpected(res.error());
     raw_image = std::move(*res);

@@ -15,7 +15,7 @@ parse_header(std::span<const uint8_t> file_data) {
 }
 
 std::expected<raw::RawImage, std::string>
-decode(std::span<const uint8_t> file_data) {
+decode(std::span<const uint8_t> file_data, raw::RawImage &raw_image) {
   size_t offset = 8;
 
   auto header_chunk = PngChunk::from_bytes(file_data, offset);
@@ -71,7 +71,6 @@ decode(std::span<const uint8_t> file_data) {
   if (dest_len != decompressed_size)
     return std::unexpected("decompressed data size mismatch");
 
-  raw::RawImage raw_image;
   raw_image.width = header.width;
   raw_image.height = header.height;
   raw_image.channels = channels;
