@@ -11,7 +11,7 @@ int parse(int argc, char *argv[], prisma::PrismaCliConfig &config) {
   CLI::App *info_cmd =
       app.add_subcommand("info", "Display metadata of the file");
 
-  info_cmd->add_option("-i,--input", config.file_in, "Path to the input file")
+  info_cmd->add_option("input", config.file_in, "Path to the input file")
       ->required()
       ->check(CLI::ExistingFile);
   info_cmd->callback([&]() { config.command = Command::INFO; });

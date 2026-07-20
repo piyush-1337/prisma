@@ -1,7 +1,12 @@
 #include <bit>
+#include <experimental/simd>
 #include <format>
 #include <prisma/codecs/image/png/png.hpp>
 #include <zlib.h>
+
+namespace simd = std::experimental;
+using Vec8 = simd::native_simd<uint8_t>;
+constexpr size_t VEC_SIZE = Vec8::size();
 
 namespace prisma::codec::png {
 
@@ -94,7 +99,48 @@ decode(std::span<const uint8_t> file_data, core::Image &image) {
     size_t data_idx = row_idx + 1;
     size_t raw_row_idx = y * row_bytes;
 
-    for (uint32_t x{}; x < row_bytes; ++x) {
+    uint32_t x = 0;
+    uint32_t vec_limit = row_bytes - (row_bytes % VEC_SIZE);
+
+    switch (filter) {
+    case 0: {
+      for (; x < vec_limit; x += VEC_SIZE) {
+        Vec8 current(&decompressed_data[data_idx + x], simd::element_aligned);
+        current.copy_to(&image.pixels[raw_row_idx + x], simd::element_aligned);
+      }
+      break;
+    }
+
+    case 1:
+      break;
+
+    case 2: {
+      for (; x < vec_limit; x += VEC_SIZE) {
+        Vec8 current(&decompressed_data[data_idx + x], simd::element_aligned);
+        Vec8 up;
+        if (y > 0) {
+          up.copy_from(&image.pixels[raw_row_idx - row_bytes + x],
+                       simd::element_aligned);
+        } else {
+          up = 0;
+        }
+
+        Vec8 res = current + up;
+        res.copy_to(&image.pixels[raw_row_idx + x], simd::element_aligned);
+      }
+      break;
+    }
+
+    case 3:
+    case 4:
+      break;
+
+    default:
+      return std::unexpected(std::format("unknown png filter: {}", filter));
+    }
+
+    // when x > vec_limit or case == 1,3,4 (sub, avg, paeth) which is hard in simd
+    for (; x < row_bytes; ++x) {
       uint8_t byte = decompressed_data[data_idx + x];
 
       uint8_t left =
@@ -108,25 +154,18 @@ decode(std::span<const uint8_t> file_data, core::Image &image) {
       switch (filter) {
       case 0:
         break;
-      case 1: {
+      case 1:
         byte += left;
         break;
-      }
-      case 2: {
+      case 2:
         byte += up;
         break;
-      }
-      case 3: {
+      case 3:
         byte += (left + up) >> 1;
         break;
-      }
-      case 4: {
+      case 4:
         byte += paeth(left, up, up_left);
         break;
-      }
-      default:
-        return std::unexpected(
-            std::format("unknown png filter type: {}", filter));
       }
 
       image.pixels[raw_row_idx + x] = byte;

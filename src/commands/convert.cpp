@@ -123,6 +123,8 @@ convert(std::span<const uint8_t> file_data, Filters filters,
   case Format::UNKNOWN:
     return std::unexpected("destination format unknown/unimplemented");
   }
+
+  return std::unexpected("shouldn't reach here");
 }
 
 } // namespace prisma
