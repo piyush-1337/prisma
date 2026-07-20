@@ -28,8 +28,7 @@ std::expected<void, std::string> execute(PrismaCliConfig &config) {
       return codec::bmp::print_info(file->data());
     };
     case Format::WAV: {
-      std::println("WAV");
-      break;
+      return codec::wav::print_info(file->data());
     }
     case Format::FLAC: {
       std::println("FLAC");

@@ -19,5 +19,11 @@ std::expected<void, std::string> print_info(std::span<const uint8_t> file_data);
 
 }
 
+namespace codec::wav {
+
+std::expected<void, std::string> print_info(std::span<const uint8_t> file_data);
+
+}
+
 
 } // namespace prisma
