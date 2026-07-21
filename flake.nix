@@ -36,7 +36,7 @@
 
       devShells.${system}.default = pkgs.mkShell {
         packages = with pkgs; [
-          gcc
+          gcc16
           cmake
           ninja
           cli11
@@ -44,7 +44,6 @@
 
           gbenchmark
 
-          clang
           clang-tools
           neocmakelsp
         ];

@@ -1,11 +1,11 @@
 #include <bit>
-#include <experimental/simd>
+#include <simd>
 #include <format>
 #include <prisma/codecs/image/png/png.hpp>
 #include <zlib.h>
 
-namespace simd = std::experimental;
-using Vec8 = simd::native_simd<uint8_t>;
+namespace simd = std::simd;
+using Vec8 = simd::basic_vec<uint8_t>;
 constexpr size_t VEC_SIZE = Vec8::size();
 
 namespace prisma::codec::png {
@@ -105,8 +105,8 @@ decode(std::span<const uint8_t> file_data, core::Image &image) {
     switch (filter) {
     case 0: {
       for (; x < vec_limit; x += VEC_SIZE) {
-        Vec8 current(&decompressed_data[data_idx + x], simd::element_aligned);
-        current.copy_to(&image.pixels[raw_row_idx + x], simd::element_aligned);
+        auto current = simd::unchecked_load<Vec8>(&decompressed_data[data_idx + x], VEC_SIZE);
+        simd::unchecked_store(current, &image.pixels[raw_row_idx + x], VEC_SIZE);
       }
       break;
     }
@@ -116,17 +116,14 @@ decode(std::span<const uint8_t> file_data, core::Image &image) {
 
     case 2: {
       for (; x < vec_limit; x += VEC_SIZE) {
-        Vec8 current(&decompressed_data[data_idx + x], simd::element_aligned);
-        Vec8 up;
+        auto current = simd::unchecked_load<Vec8>(&decompressed_data[data_idx + x], VEC_SIZE);
+        Vec8 up{};
         if (y > 0) {
-          up.copy_from(&image.pixels[raw_row_idx - row_bytes + x],
-                       simd::element_aligned);
-        } else {
-          up = 0;
+          up = simd::unchecked_load<Vec8>(&image.pixels[raw_row_idx - row_bytes + x], VEC_SIZE);
         }
 
         Vec8 res = current + up;
-        res.copy_to(&image.pixels[raw_row_idx + x], simd::element_aligned);
+        simd::unchecked_store(res, &image.pixels[raw_row_idx + x], VEC_SIZE);
       }
       break;
     }

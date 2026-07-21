@@ -19,6 +19,7 @@ set(SOURCES
     ./src/core/image.cpp
 )
 
+add_compile_options(-march=native)
 add_library(prisma_core OBJECT ${SOURCES})
 
 target_include_directories(prisma_core PUBLIC ${PROJECT_SOURCE_DIR}/include)
