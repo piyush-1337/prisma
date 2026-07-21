@@ -1,8 +1,8 @@
 #include <bit>
-#include <simd>
 #include <format>
+#include <libdeflate.h>
 #include <prisma/codecs/image/png/png.hpp>
-#include <zlib.h>
+#include <simd>
 
 namespace simd = std::simd;
 using Vec8 = simd::basic_vec<uint8_t>;
@@ -62,18 +62,28 @@ decode(std::span<const uint8_t> file_data, core::Image &image) {
     return std::unexpected("only rgb and rgba are supported for png");
 
   uint32_t row_bytes = header.width * channels;
-  size_t decompressed_size = header.height * (1 + row_bytes);
+  size_t total_size = header.height * (1 + row_bytes);
 
-  std::vector<uint8_t> decompressed_data(decompressed_size);
+  std::vector<uint8_t> decompressed_data(total_size);
 
-  uLongf dest_len = static_cast<uLongf>(decompressed_data.size());
-  int zres = uncompress(decompressed_data.data(), &dest_len,
-                        compressed_data.data(), compressed_data.size());
-  if (zres != Z_OK)
+  struct libdeflate_decompressor *decompressor =
+      libdeflate_alloc_decompressor();
+  if (!decompressor)
+    return std::unexpected("failed to allocate libdeflate decompressor");
+
+  size_t decompressed_size = 0;
+  enum libdeflate_result de_res = libdeflate_zlib_decompress(
+      decompressor, compressed_data.data(), compressed_data.size(),
+      decompressed_data.data(), total_size, &decompressed_size);
+
+  libdeflate_free_decompressor(decompressor);
+
+  if (de_res != LIBDEFLATE_SUCCESS)
     return std::unexpected(
-        std::format("decompression failed with zlib error code: {}", zres));
+        std::format("decompression failed with libdeflate error code: {}",
+                    static_cast<int>(de_res)));
 
-  if (dest_len != decompressed_size)
+  if (decompressed_size != total_size)
     return std::unexpected("decompressed data size mismatch");
 
   image.width = header.width;
@@ -105,8 +115,10 @@ decode(std::span<const uint8_t> file_data, core::Image &image) {
     switch (filter) {
     case 0: {
       for (; x < vec_limit; x += VEC_SIZE) {
-        auto current = simd::unchecked_load<Vec8>(&decompressed_data[data_idx + x], VEC_SIZE);
-        simd::unchecked_store(current, &image.pixels[raw_row_idx + x], VEC_SIZE);
+        auto current = simd::unchecked_load<Vec8>(
+            &decompressed_data[data_idx + x], VEC_SIZE);
+        simd::unchecked_store(current, &image.pixels[raw_row_idx + x],
+                              VEC_SIZE);
       }
       break;
     }
@@ -116,10 +128,12 @@ decode(std::span<const uint8_t> file_data, core::Image &image) {
 
     case 2: {
       for (; x < vec_limit; x += VEC_SIZE) {
-        auto current = simd::unchecked_load<Vec8>(&decompressed_data[data_idx + x], VEC_SIZE);
+        auto current = simd::unchecked_load<Vec8>(
+            &decompressed_data[data_idx + x], VEC_SIZE);
         Vec8 up{};
         if (y > 0) {
-          up = simd::unchecked_load<Vec8>(&image.pixels[raw_row_idx - row_bytes + x], VEC_SIZE);
+          up = simd::unchecked_load<Vec8>(
+              &image.pixels[raw_row_idx - row_bytes + x], VEC_SIZE);
         }
 
         Vec8 res = current + up;
@@ -136,7 +150,8 @@ decode(std::span<const uint8_t> file_data, core::Image &image) {
       return std::unexpected(std::format("unknown png filter: {}", filter));
     }
 
-    // when x > vec_limit or case == 1,3,4 (sub, avg, paeth) which is hard in simd
+    // when x > vec_limit or case == 1,3,4 (sub, avg, paeth) which is hard in
+    // simd
     for (; x < row_bytes; ++x) {
       uint8_t byte = decompressed_data[data_idx + x];
 
@@ -187,15 +202,13 @@ void write_chunk(std::vector<uint8_t> &out, const uint8_t type[4],
   out.insert(out.end(), type, type + 4);
   out.insert(out.end(), data.begin(), data.end());
 
-  uLong crc = crc32(0L, Z_NULL, 0);
-  crc = crc32(crc, out.data() + crc_start, out.size() - crc_start);
-
-  uint32_t crcu32 = static_cast<uint32_t>(crc);
+  uint32_t crc =
+      libdeflate_crc32(0, out.data() + crc_start, out.size() - crc_start);
   if constexpr (std::endian::native == std::endian::little) {
-    crcu32 = std::byteswap(crcu32);
+    crc = std::byteswap(crc);
   }
 
-  ptr = reinterpret_cast<const uint8_t *>(&crcu32);
+  ptr = reinterpret_cast<const uint8_t *>(&crc);
   out.insert(out.end(), ptr, ptr + 4);
 }
 
@@ -212,16 +225,24 @@ std::expected<PngImage, std::string> encode(const core::Image &image) {
     std::memcpy(&data[data_idx + 1], &image.pixels[raw_idx], raw_row_bytes);
   }
 
-  uLongf dest_len = compressBound(static_cast<uLongf>(data_size));
-  std::vector<uint8_t> compressed_data(dest_len);
+  struct libdeflate_compressor *compressor = libdeflate_alloc_compressor(6);
+  if (!compressor)
+    return std::unexpected("failed to allocate libdeflate compressor");
 
-  int zres =
-      compress(compressed_data.data(), &dest_len, data.data(), data_size);
-  if (zres != Z_OK)
-    return std::unexpected(
-        std::format("compression failed with zlib error: {}", zres));
+  size_t max_compressed_size =
+      libdeflate_zlib_compress_bound(compressor, data_size);
+  std::vector<uint8_t> compressed_data(max_compressed_size);
 
-  compressed_data.resize(dest_len);
+  size_t compressed_size =
+      libdeflate_zlib_compress(compressor, data.data(), data_size,
+                               compressed_data.data(), max_compressed_size);
+
+  libdeflate_free_compressor(compressor);
+
+  if (compressed_size == 0)
+    return std::unexpected("compression failed with libdeflate");
+
+  compressed_data.resize(compressed_size);
 
   PngImage image_out;
 

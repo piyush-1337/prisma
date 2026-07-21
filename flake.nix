@@ -40,7 +40,7 @@
           cmake
           ninja
           cli11
-          zlib
+          libdeflate
 
           gbenchmark
 

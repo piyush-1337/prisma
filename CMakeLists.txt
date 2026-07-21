@@ -24,8 +24,8 @@ add_library(prisma_core OBJECT ${SOURCES})
 
 target_include_directories(prisma_core PUBLIC ${PROJECT_SOURCE_DIR}/include)
 
-find_package(ZLIB REQUIRED)
-target_link_libraries(prisma_core PUBLIC ZLIB::ZLIB)
+find_package(libdeflate REQUIRED)
+target_link_libraries(prisma_core PRIVATE libdeflate::libdeflate_shared)
 
 add_executable(prisma src/main.cpp)
 
