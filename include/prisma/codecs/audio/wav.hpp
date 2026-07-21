@@ -3,7 +3,9 @@
 #include <bit>
 #include <cstdint>
 #include <cstring>
+#include <expected>
 #include <span>
+#include <string>
 
 namespace prisma::codec::wav {
 
@@ -83,5 +85,8 @@ struct FmtChunk {
 };
 
 #pragma pack(pop)
+
+std::expected<FmtChunk, std::string>
+parse_fmt_chunk(std::span<const uint8_t> file_data);
 
 } // namespace prisma::codec::wav

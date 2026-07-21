@@ -17,6 +17,7 @@ set(SOURCES
     ./src/codecs/image/bmp/bmp.cpp
     ./src/codecs/image/png/png.cpp
     ./src/core/image.cpp
+    ./src/codecs/audio/wav/wav.cpp
 )
 
 add_compile_options(-march=native)
