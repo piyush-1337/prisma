@@ -4,6 +4,7 @@
 #include <cstdint>
 #include <cstring>
 #include <expected>
+#include <prisma/core/audio.hpp>
 #include <span>
 #include <string>
 
@@ -88,5 +89,8 @@ struct FmtChunk {
 
 std::expected<FmtChunk, std::string>
 parse_fmt_chunk(std::span<const uint8_t> file_data);
+
+std::expected<core::Audio, std::string>
+decode(std::span<const uint8_t> file_data);
 
 } // namespace prisma::codec::wav
