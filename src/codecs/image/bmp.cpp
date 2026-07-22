@@ -2,7 +2,7 @@
 #include <cstdint>
 #include <cstring>
 #include <prisma/format.hpp>
-#include <prisma/codecs/image/bmp/bmp.hpp>
+#include <prisma/codecs/image/bmp.hpp>
 #include <prisma/core/image.hpp>
 
 namespace prisma::codec::bmp {

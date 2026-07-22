@@ -1,11 +1,13 @@
 #include <bit>
 #include <cstdint>
 #include <fstream>
+#include <prisma/codecs/audio/wav.hpp>
+#include <prisma/codecs/image/bmp.hpp>
+#include <prisma/codecs/image/png.hpp>
 #include <prisma/commands/convert.hpp>
-#include <prisma/format.hpp>
-#include <prisma/codecs/image/bmp/bmp.hpp>
-#include <prisma/codecs/image/png/png.hpp>
+#include <prisma/core/audio.hpp>
 #include <prisma/core/image.hpp>
+#include <prisma/format.hpp>
 
 namespace prisma {
 
@@ -16,6 +18,25 @@ convert(std::span<const uint8_t> file_data, Filters filters,
   auto src = identify_format(file_data);
   auto dest = identify_format_from_ext(out_path);
 
+  MediaType src_type = get_media_type(src);
+  MediaType dest_type = get_media_type(dest);
+
+  if (src_type != dest_type)
+    return std::unexpected("input and output are not of same media type");
+
+  if (src_type == MediaType::IMAGE) {
+    return convert_image(src, dest, file_data, filters.image_filters, out_path);
+  } else if (src_type == MediaType::AUDIO) {
+    return convert_audio(src, dest, file_data, filters.audio_filters, out_path);
+  }
+
+  return std::unexpected("unknown media type");
+}
+
+std::expected<void, std::string>
+convert_image(Format src, Format dest, std::span<const uint8_t> file_data,
+              ImageFilters image_filters,
+              const std::filesystem::path &out_path) {
   core::Image image;
 
   switch (src) {
@@ -26,24 +47,22 @@ convert(std::span<const uint8_t> file_data, Filters filters,
     image = std::move(*res);
     break;
   }
-  case Format::WAV:
-  case Format::FLAC:
   case Format::PNG: {
-    core::Image image_temp;
-    auto res = codec::png::decode(file_data, image_temp);
+    auto res = codec::png::decode(file_data);
     if (!res)
       return std::unexpected(res.error());
     image = std::move(*res);
     break;
   }
+  default:
   case Format::UNKNOWN:
     return std::unexpected("source format unknown/unimplemented");
   }
 
-  if (filters.grayscale) {
+  if (image_filters.grayscale) {
     core::apply_grayscale(image);
   }
-  if (filters.invert) {
+  if (image_filters.invert) {
     core::apply_invert(image);
   }
 
@@ -60,46 +79,19 @@ convert(std::span<const uint8_t> file_data, Filters filters,
                                   out_path.string()));
     }
 
-    if constexpr (std::endian::native == std::endian::little) {
-
-      out.write(reinterpret_cast<const char *>(&image_out.file_header),
-                sizeof(codec::bmp::BmpFileHeader));
-      out.write(reinterpret_cast<const char *>(&image_out.info_header),
-                sizeof(codec::bmp::BmpInfoHeader));
-    } else {
-      codec::bmp::BmpFileHeader le_file_header = image_out.file_header;
-      le_file_header.file_size = std::byteswap(le_file_header.file_size);
-      le_file_header.reserved1 = std::byteswap(le_file_header.reserved1);
-      le_file_header.reserved2 = std::byteswap(le_file_header.reserved2);
-      le_file_header.data_offset = std::byteswap(le_file_header.data_offset);
-
-      codec::bmp::BmpInfoHeader le_info_header = image_out.info_header;
-      le_info_header.header_size = std::byteswap(le_info_header.header_size);
-      le_info_header.width = std::byteswap(le_info_header.width);
-      le_info_header.height = std::byteswap(le_info_header.height);
-      le_info_header.npanes = std::byteswap(le_info_header.npanes);
-      le_info_header.cdepth = std::byteswap(le_info_header.cdepth);
-      le_info_header.compression_method =
-          std::byteswap(le_info_header.compression_method);
-      le_info_header.image_size = std::byteswap(le_info_header.image_size);
-      le_info_header.h_res = std::byteswap(le_info_header.h_res);
-      le_info_header.v_res = std::byteswap(le_info_header.v_res);
-      le_info_header.ncolors = std::byteswap(le_info_header.ncolors);
-      le_info_header.nimpcolors = std::byteswap(le_info_header.nimpcolors);
-
-      out.write(reinterpret_cast<const char *>(&le_file_header),
-                sizeof(codec::bmp::BmpFileHeader));
-      out.write(reinterpret_cast<const char *>(&le_info_header),
-                sizeof(codec::bmp::BmpInfoHeader));
+    if constexpr (std::endian::native == std::endian::big) {
+      image_out.swap_endianess();
     }
 
+    out.write(reinterpret_cast<const char *>(&image_out.file_header),
+              sizeof(codec::bmp::BmpFileHeader));
+    out.write(reinterpret_cast<const char *>(&image_out.info_header),
+              sizeof(codec::bmp::BmpInfoHeader));
     out.write(reinterpret_cast<const char *>(image_out.pixels.data()),
               image_out.pixels.size());
 
     return {};
   }
-  case Format::WAV:
-  case Format::FLAC:
   case Format::PNG: {
     auto res = codec::png::encode(image);
     if (!res)
@@ -120,11 +112,59 @@ convert(std::span<const uint8_t> file_data, Filters filters,
 
     return {};
   }
+  default:
   case Format::UNKNOWN:
     return std::unexpected("destination format unknown/unimplemented");
   }
 
   return std::unexpected("shouldn't reach here");
+}
+
+std::expected<void, std::string>
+convert_audio(Format src, Format dest, std::span<const uint8_t> file_data,
+              AudioFilers audio_filters,
+              const std::filesystem::path &out_path) {
+
+  core::Audio audio;
+  switch (src) {
+  case Format::WAV: {
+    auto res = codec::wav::decode(file_data);
+    if (!res)
+      return std::unexpected(res.error());
+    audio = std::move(*res);
+    break;
+  }
+  default:
+    return std::unexpected("not yet implemented");
+  }
+
+  switch (dest) {
+  case Format::WAV: {
+    auto res = codec::wav::encode(audio);
+    if (!res)
+      return std::unexpected(res.error());
+
+    codec::wav::WavAudio wav_audio = std::move(*res);
+
+    std::ofstream out(out_path, std::ios::binary);
+    out.write(reinterpret_cast<const char *>(&wav_audio.master_header),
+              sizeof(codec::wav::MasterRiffHeader));
+    out.write(reinterpret_cast<const char *>(&wav_audio.fmt_chunk_header),
+              sizeof(codec::wav::ChunkHeader));
+    out.write(reinterpret_cast<const char *>(&wav_audio.fmt_chunk),
+              sizeof(codec::wav::FmtChunk));
+    out.write(reinterpret_cast<const char *>(&wav_audio.data_chunk_header),
+              sizeof(codec::wav::ChunkHeader));
+    out.write(reinterpret_cast<const char *>(wav_audio.pcm.data()),
+              wav_audio.pcm.size());
+
+    break;
+  }
+  default:
+    return std::unexpected("not yet implemented");
+  }
+
+  return {};
 }
 
 } // namespace prisma

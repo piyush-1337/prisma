@@ -217,7 +217,7 @@ std::expected<PngImageHeader, std::string>
 parse_header(std::span<const uint8_t> file_data);
 
 std::expected<core::Image, std::string>
-decode(std::span<const uint8_t> file_data, core::Image &image);
+decode(std::span<const uint8_t> file_data);
 
 std::expected<PngImage, std::string> encode(const core::Image &image);
 

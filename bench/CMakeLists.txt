@@ -1,6 +1,6 @@
 find_package(benchmark REQUIRED)
 
-add_executable(prisma_bench main.cpp bench_png.cpp bench_bmp.cpp)
+add_executable(prisma_bench main.cpp bench_png.cpp bench_bmp.cpp bench_wav.cpp)
 
 target_compile_options(prisma_bench PRIVATE -O3 -march=native)
 

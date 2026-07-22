@@ -1,7 +1,7 @@
 #include <bit>
 #include <format>
 #include <libdeflate.h>
-#include <prisma/codecs/image/png/png.hpp>
+#include <prisma/codecs/image/png.hpp>
 #include <simd>
 
 namespace simd = std::simd;
@@ -20,7 +20,7 @@ parse_header(std::span<const uint8_t> file_data) {
 }
 
 std::expected<core::Image, std::string>
-decode(std::span<const uint8_t> file_data, core::Image &image) {
+decode(std::span<const uint8_t> file_data) {
   size_t offset = 8;
 
   auto header_chunk = PngChunk::from_bytes(file_data, offset);
@@ -86,6 +86,7 @@ decode(std::span<const uint8_t> file_data, core::Image &image) {
   if (decompressed_size != total_size)
     return std::unexpected("decompressed data size mismatch");
 
+  core::Image image;
   image.width = header.width;
   image.height = header.height;
   image.channels = channels;

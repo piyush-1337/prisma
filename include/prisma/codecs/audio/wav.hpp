@@ -53,7 +53,7 @@ struct ChunkHeader {
 
 struct FmtChunk {
   // 1 = PCM
-  uint16_t audio_format;
+  uint16_t audio_format = 1;
   // 1 = Mono, 2 = Stereo
   uint16_t num_channels;
   // frequency
@@ -85,6 +85,14 @@ struct FmtChunk {
   }
 };
 
+struct WavAudio {
+  MasterRiffHeader master_header;
+  ChunkHeader fmt_chunk_header;
+  FmtChunk fmt_chunk;
+  ChunkHeader data_chunk_header;
+  std::vector<uint8_t> pcm;
+};
+
 #pragma pack(pop)
 
 std::expected<FmtChunk, std::string>
@@ -92,5 +100,7 @@ parse_fmt_chunk(std::span<const uint8_t> file_data);
 
 std::expected<core::Audio, std::string>
 decode(std::span<const uint8_t> file_data);
+
+std::expected<WavAudio, std::string> encode(core::Audio audio);
 
 } // namespace prisma::codec::wav

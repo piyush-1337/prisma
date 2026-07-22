@@ -32,6 +32,8 @@ Format identify_format_from_ext(const std::filesystem::path &path) {
     return Format::BMP;
   if (ext == ".png")
     return Format::PNG;
+  if (ext == ".wav")
+    return Format::WAV;
 
   return Format::UNKNOWN;
   

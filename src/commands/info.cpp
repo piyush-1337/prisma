@@ -1,8 +1,8 @@
 #include <cstdint>
 #include <print>
 #include <prisma/codecs/audio/wav.hpp>
-#include <prisma/codecs/image/bmp/bmp.hpp>
-#include <prisma/codecs/image/png/png.hpp>
+#include <prisma/codecs/image/bmp.hpp>
+#include <prisma/codecs/image/png.hpp>
 #include <prisma/commands/info.hpp>
 #include <span>
 

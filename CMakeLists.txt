@@ -14,10 +14,10 @@ set(SOURCES
     ./src/format.cpp
     ./src/commands/info.cpp
     ./src/commands/convert.cpp
-    ./src/codecs/image/bmp/bmp.cpp
-    ./src/codecs/image/png/png.cpp
+    ./src/codecs/image/bmp.cpp
+    ./src/codecs/image/png.cpp
     ./src/core/image.cpp
-    ./src/codecs/audio/wav/wav.cpp
+    ./src/codecs/audio/wav.cpp
 )
 
 add_compile_options(-march=native)

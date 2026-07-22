@@ -25,6 +25,13 @@ struct BmpFileHeader {
   /// The offset, i.e. starting address, of the byte where the bitmap image data
   /// (pixel array) can be found.
   uint32_t data_offset;
+
+  void swap_endianess() {
+    file_size = std::byteswap(file_size);
+    reserved1 = std::byteswap(reserved1);
+    reserved2 = std::byteswap(reserved2);
+    data_offset = std::byteswap(data_offset);
+  }
 };
 
 struct BmpInfoHeader {
@@ -53,6 +60,20 @@ struct BmpInfoHeader {
   /// the number of important colors used, or 0 when every color is important;
   /// generally ignored
   uint32_t nimpcolors;
+
+  void swap_endianess() {
+    header_size = std::byteswap(header_size);
+    width = std::byteswap(width);
+    height = std::byteswap(height);
+    npanes = std::byteswap(npanes);
+    cdepth = std::byteswap(cdepth);
+    compression_method = std::byteswap(compression_method);
+    image_size = std::byteswap(image_size);
+    h_res = std::byteswap(h_res);
+    v_res = std::byteswap(v_res);
+    ncolors = std::byteswap(ncolors);
+    nimpcolors = std::byteswap(nimpcolors);
+  }
 };
 
 #pragma pack(pop)
@@ -61,6 +82,11 @@ struct BmpImage {
   BmpFileHeader file_header;
   BmpInfoHeader info_header;
   std::vector<uint8_t> pixels;
+
+  void swap_endianess() {
+    file_header.swap_endianess();
+    info_header.swap_endianess();
+  }
 };
 
 std::expected<std::pair<BmpFileHeader, BmpInfoHeader>, std::string>

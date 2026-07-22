@@ -27,9 +27,12 @@ int parse(int argc, char *argv[], prisma::PrismaCliConfig &config) {
       ->required();
   convert_cmd->callback([&]() { config.command = Command::CONVERT; });
 
-  convert_cmd->add_flag("--invert", config.filters.invert, "Invert all colors");
-  convert_cmd->add_flag("--grayscale", config.filters.grayscale,
+  convert_cmd->add_flag("--invert", config.filters.image_filters.invert,
+                        "Invert all colors");
+  convert_cmd->add_flag("--grayscale", config.filters.image_filters.grayscale,
                         "Apply luminance grayscale");
+  convert_cmd->add_option("-v,--volume", config.filters.audio_filters.volume,
+                          "Set volume");
 
   CLI11_PARSE(app, argc, argv);
 

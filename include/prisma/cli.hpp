@@ -10,10 +10,19 @@ enum class Command {
   CONVERT,
 };
 
-// always initialize your booleans
-struct Filters {
+struct ImageFilters {
   bool invert = false;
   bool grayscale = false;
+};
+
+struct AudioFilers {
+  float volume = 1.0;
+};
+
+// always initialize your booleans
+struct Filters {
+  ImageFilters image_filters;
+  AudioFilers audio_filters;
 };
 
 struct PrismaCliConfig {
