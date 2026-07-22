@@ -140,7 +140,7 @@ convert_audio(Format src, Format dest, std::span<const uint8_t> file_data,
 
   switch (dest) {
   case Format::WAV: {
-    auto res = codec::wav::encode(audio);
+    auto res = codec::wav::encode(std::move(audio));
     if (!res)
       return std::unexpected(res.error());
 

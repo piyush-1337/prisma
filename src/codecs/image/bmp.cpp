@@ -158,7 +158,7 @@ std::expected<BmpImage, std::string> encode(const core::Image &image) {
 
   return BmpImage{.file_header = file_header,
                   .info_header = info_header,
-                  .pixels = bmp_pixels};
+                  .pixels = std::move(bmp_pixels)};
 }
 
 } // namespace prisma::codec::bmp
