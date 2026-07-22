@@ -17,6 +17,7 @@ set(SOURCES
     ./src/codecs/image/bmp.cpp
     ./src/codecs/image/png.cpp
     ./src/core/image.cpp
+    ./src/core/audio.cpp
     ./src/codecs/audio/wav.cpp
 )
 

@@ -138,6 +138,10 @@ convert_audio(Format src, Format dest, std::span<const uint8_t> file_data,
     return std::unexpected("not yet implemented");
   }
 
+  if (audio_filters.volume != 1.0f) {
+    core::apply_volume(audio, audio_filters.volume);
+  }
+
   switch (dest) {
   case Format::WAV: {
     auto res = codec::wav::encode(std::move(audio));

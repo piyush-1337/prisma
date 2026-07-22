@@ -14,4 +14,6 @@ struct Audio {
     std::vector<uint8_t> pcm;
 };
 
+void apply_volume(Audio &audio, const float multiplier);
+
 } // namespace prisma::core
